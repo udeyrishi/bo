@@ -14,6 +14,7 @@ BOT_NAME = 'bo'
 SPIDER_MODULES = ['bo.spiders']
 NEWSPIDER_MODULE = 'bo.spiders'
 
+START_URLS = './urls.csv'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'bo (+http://www.yourdomain.com)'
