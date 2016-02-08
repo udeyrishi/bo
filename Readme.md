@@ -20,6 +20,22 @@
     ```sh
     $ python -m pip install scrapy
     ```
+4. [Requests](http://docs.python-requests.org/en/latest/user/install/)
+
+    ```sh
+    $ python -m pip install requests
+    ```
+5. [Alchemy Python SDK](http://www.alchemyapi.com/developers/getting-started-guide/using-alchemyapi-with-python)
+    -included as a git submodule
+
+    ```sh
+    # If not cloned yet:
+    $ git clone --recursive https://github.com/udeyrishi/Bo
+
+    # If already cloned:
+    $ cd Bo
+    $ git submodule init && git submodule update
+    ```
 
 ###Running
 ```sh
