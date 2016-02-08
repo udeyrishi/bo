@@ -7,10 +7,18 @@ from bo.utils.sequence_utils import *
 
 
 class BoSpider(scrapy.Spider):
+    """
+    The main spider for the Bo crawler.
+    """
     name = "bo"
     START_URLS_SETTING_NAME = 'START_URLS'
 
     def __init__(self, start_urls_path=None):
+        """
+        Creates a new instance of BoSpider.
+        :param start_urls_path: The path to the CSV files containing the start URLs and nodes (domains).
+        :return: The created BoSpider object.
+        """
         scrapy.Spider.__init__(self)
         self.start_urls_path = start_urls_path
         self.allowed_domains = []
@@ -80,6 +88,11 @@ class BoSpider(scrapy.Spider):
             return url
 
     def parse(self, response):
+        """
+        The default callback used by the spider to parse the responses.
+        :param response: The response object for a particular request.
+        :return: The generator for generating any new URLs that need to be queued.
+        """
         for href in response.css("ul.directory.dir-col > li > a::attr('href')"):
             url = response.urljoin(href.extract())
             yield scrapy.Request(url, callback=self.parse_dir_contents)
