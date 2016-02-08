@@ -1,29 +1,35 @@
-import scrapy
-import csv
-from scrapy.exceptions import CloseSpider
-from scrapy.utils.project import get_project_settings
+from csv import DictReader
 from urlparse import urlparse
-from bo.utils.sequence_utils import *
+
+from scrapy.exceptions import CloseSpider
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.utils.project import get_project_settings
+
+from bo.utils.sequence_utils import remove_duplicates
 
 
-class BoSpider(scrapy.Spider):
+class BoSpider(CrawlSpider):
     """
     The main spider for the Bo crawler.
     """
     name = "bo"
     START_URLS_SETTING_NAME = 'START_URLS'
+    allowed_domains = []
+    start_urls = []
 
-    def __init__(self, start_urls_path=None):
+    # Just extract all the links from the page and queue them up. allowed_domains will block all the external links
+    rules = (Rule(LinkExtractor()),)
+    url_metadata = dict()
+
+    def __init__(self, start_urls_path=None, *args, **kwargs):
         """
         Creates a new instance of BoSpider.
         :param start_urls_path: The path to the CSV files containing the start URLs and nodes (domains).
         :return: The created BoSpider object.
         """
-        scrapy.Spider.__init__(self)
+        super(BoSpider, self).__init__(*args, **kwargs)
         self.start_urls_path = start_urls_path
-        self.allowed_domains = []
-        self.start_urls = []
-        self.url_metadata = dict()
         self.__read_start_urls(get_project_settings())
 
     def __read_start_urls(self, settings):
@@ -47,7 +53,7 @@ class BoSpider(scrapy.Spider):
                 raise CloseSpider(message)
 
         with open(self.start_urls_path, 'r') as starting_urls_csv:
-            url_reader = csv.DictReader(starting_urls_csv)
+            url_reader = DictReader(starting_urls_csv)
 
             for row in url_reader:
                 if row['Node'] and row['URL']:
@@ -86,22 +92,3 @@ class BoSpider(scrapy.Spider):
             return scheme + '://' + url
         else:
             return url
-
-    def parse(self, response):
-        """
-        The default callback used by the spider to parse the responses.
-        :param response: The response object for a particular request.
-        :return: The generator for generating any new URLs that need to be queued.
-        """
-        for href in response.css("ul.directory.dir-col > li > a::attr('href')"):
-            url = response.urljoin(href.extract())
-            yield scrapy.Request(url, callback=self.parse_dir_contents)
-
-    @staticmethod
-    def parse_dir_contents(response):
-        for sel in response.xpath('//ul/li'):
-            item = dict()
-            item['title'] = sel.xpath('a/text()').extract()
-            item['link'] = sel.xpath('a/@href').extract()
-            item['desc'] = sel.xpath('text()').extract()
-            yield item
