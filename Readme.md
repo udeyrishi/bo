@@ -53,3 +53,18 @@ Use [this](http://stackoverflow.com/questions/21788939/how-to-use-pycharm-to-deb
     ```
 
 2. Set working directory to the path to the repo
+
+###Filtering ideas:
+1. Extract named entities/proper nouns such as places, people, organizations, etc. and match them against a predefined set of keywords. If the number of matched elements >= N, proceed with the analysis. If yes, what keywords should be used, and do you have an initial value of N?
+2. Extract keywords and do the same, but these keywords can be anything (not just named entities). Most likely, this is a superset of above.
+3. Look for matching concepts (text) that the Watson computer thinks relate to a particular page, even if these concepts didn’t necessarily appear in the page. Pick only the concepts with relevance >= threshold F. Match these concepts like 1.
+
+###Processing ideas:
+Applies only the filtered pages:
+1. The keywords + entity filters already should have sentiments attached for these words.
+Pass them along. Then find a sentiment for the entire page.
+Targetted sentiments are not useful, as the keyword + entity search in filtering stage should give the corresponding sentiments.
+
+=> Combine the keyword, entity, page sentiments into 1 score 0-1. Put individual ones in the DTO, and use the global score.
+2. [CREATE MONGO DTO] Extract author. Check for return status to be 'ERROR'
+3. [CREATE MONGO DTO] Extract category
