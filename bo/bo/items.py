@@ -8,7 +8,7 @@
 import scrapy
 
 
-class BoItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class BoPipelineItem(scrapy.Item):
+    html_response = scrapy.Field()
+    entities_nlp_result = scrapy.Field()
+    entities_match_count = scrapy.Field()

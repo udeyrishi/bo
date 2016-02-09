@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
-
-# Scrapy settings for bo project
-#
-# For simplicity, this file contains only settings considered important or
-# commonly used. You can find more settings consulting the documentation:
-#
-#     http://doc.scrapy.org/en/latest/topics/settings.html
-#     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-#     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
+#################### BO CONFIGURATION #########################
+START_URLS_FILE = './urls.csv'
+KEYWORDS_FILE = './keywords.txt'
+# WARNING: Don't leave the API key in the settings when committing!
+ALCHEMY_API_KEY = 'xxxxxxxxxxxxxxxxxxxx'
+KEYWORD_MATCH_THRESHOLD = 1
+##############################################################
 
 BOT_NAME = 'bo'
-
 SPIDER_MODULES = ['bo.spiders']
 NEWSPIDER_MODULE = 'bo.spiders'
-
-START_URLS = './urls.csv'
+ITEM_PIPELINES = {
+    'bo.pipelines.alchemy_nlp_pipeline.NamedEntitiesFilter': 0
+}
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'bo (+http://www.yourdomain.com)'

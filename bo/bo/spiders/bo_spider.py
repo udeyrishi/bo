@@ -1,11 +1,12 @@
 from csv import DictReader
 from urlparse import urlparse
 
-from scrapy.exceptions import CloseSpider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.utils.project import get_project_settings
 
+from bo.items import BoPipelineItem
+from bo.utils.exceptions import BoSettingsError
 from bo.utils.sequence_utils import remove_duplicates
 
 
@@ -14,12 +15,12 @@ class BoSpider(CrawlSpider):
     The main spider for the Bo crawler.
     """
     name = "bo"
-    START_URLS_SETTING_NAME = 'START_URLS'
+    START_URLS_SETTING_NAME = 'START_URLS_FILE'
     allowed_domains = []
     start_urls = []
 
     # Just extract all the links from the page and queue them up. allowed_domains will block all the external links
-    rules = (Rule(LinkExtractor()),)
+    rules = (Rule(LinkExtractor(), follow=True, callback='parse_response'),)
     url_metadata = dict()
 
     def __init__(self, start_urls_path=None, *args, **kwargs):
@@ -50,7 +51,7 @@ class BoSpider(CrawlSpider):
                 message = "'{0}' setting not configured and scrapy not started with 'start_urls_path' arg. " \
                           "Failed to start the spider".format(self.START_URLS_SETTING_NAME)
                 self.logger.error(message)
-                raise CloseSpider(message)
+                raise BoSettingsError(message)
 
         with open(self.start_urls_path, 'r') as starting_urls_csv:
             url_reader = DictReader(starting_urls_csv)
@@ -92,3 +93,15 @@ class BoSpider(CrawlSpider):
             return scheme + '://' + url
         else:
             return url
+
+    # Scrapy has a weird quirk that start_urls aren't treated the same way as other scraped links, and the responses
+    # aren't put in pipelines directly by parse_response. So need to use this as a workaround.
+    # Source: http://stackoverflow.com/questions/12736257/why-dont-my-scrapy-crawlspider-rules-work
+    def parse_start_url(self, response):
+        return self.parse_response(response)
+
+    @staticmethod
+    def parse_response(response):
+        html_response = BoPipelineItem()
+        html_response['html_response'] = response
+        return html_response
