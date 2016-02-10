@@ -1,9 +1,9 @@
 #################### BO CONFIGURATION #########################
 START_URLS_FILE = './urls.csv'
-KEYWORDS_FILE = './keywords.txt'
+TAGS_FILE = './keywords.txt'
 # WARNING: Don't leave the API key in the settings when committing!
 ALCHEMY_API_KEY = 'xxxxxxxxxxxxxxxxxxxx'
-KEYWORD_MATCH_THRESHOLD = 5
+TAG_MATCH_THRESHOLD = 5
 RELEVANCE_THRESHOLD = 0.5
 ##############################################################
 
@@ -11,8 +11,7 @@ BOT_NAME = 'bo'
 SPIDER_MODULES = ['bo.spiders']
 NEWSPIDER_MODULE = 'bo.spiders'
 ITEM_PIPELINES = {
-    'bo.pipelines.alchemy_nlp_pipeline.NamedEntitiesProcessor': 0,
-    'bo.pipelines.alchemy_nlp_pipeline.KeywordsProcessor': 1
+    'bo.pipelines.alchemy_nlp_pipeline.RelevanceFilter': 0
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
