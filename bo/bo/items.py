@@ -12,12 +12,10 @@ class BoPipelineItem(scrapy.Item):
     # HTTP request results
     html_response = scrapy.Field()
 
-    # Alchemy API NLP results
+    # RelevanceFilter results
     entities_nlp_result = scrapy.Field()
     keywords_nlp_result = scrapy.Field()
     concepts_nlp_result = scrapy.Field()
-
-    # RelevanceFilter results
     tags = scrapy.Field()
     tags_matched = scrapy.Field()
 

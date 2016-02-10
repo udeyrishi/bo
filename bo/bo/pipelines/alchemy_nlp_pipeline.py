@@ -46,16 +46,11 @@ class AlchemyNLPPipeline(object):
 
 class RelevanceFilter(AlchemyNLPPipeline):
     def process_item(self, item, spider):
-        entities_nlp_result = self.alchemy_api.entities(URL_FLAVOUR, item.get_url(), options={'sentiment': 1})
-        keywords_nlp_result = self.alchemy_api.keywords(URL_FLAVOUR, item.get_url(), options={'sentiment': 1})
-        concepts_nlp_result = self.alchemy_api.concepts(URL_FLAVOUR, item.get_url())
+        entities_nlp_result, keywords_nlp_result, concepts_nlp_result = self.do_nlp(item)
 
-        relevant_entities = break_string_sequence_to_words({e['text'] for e in entities_nlp_result['entities'] if
-                                                            float(e['relevance']) >= self.relevance_threshold})
-        relevant_keywords = break_string_sequence_to_words({k['text'] for k in keywords_nlp_result['keywords'] if
-                                                            float(k['relevance']) >= self.relevance_threshold})
-        relevant_concepts = break_string_sequence_to_words({c['text'] for c in concepts_nlp_result['concepts'] if
-                                                            float(c['relevance']) >= self.relevance_threshold})
+        relevant_entities = self.extract_relevant_items('entities', entities_nlp_result)
+        relevant_keywords = self.extract_relevant_items('keywords', keywords_nlp_result)
+        relevant_concepts = self.extract_relevant_items('concepts', concepts_nlp_result)
 
         tags = relevant_entities.union(relevant_keywords, relevant_concepts)
         tags_matched = tags.intersection(self.tags)
@@ -64,10 +59,23 @@ class RelevanceFilter(AlchemyNLPPipeline):
             raise DropItem("Dropping page '{0}' because tag match count = {1} < threshold = {2}"
                            .format(item.get_url(), len(tags_matched), self.tag_match_threshold))
 
+        return self.update_item(item, entities_nlp_result, concepts_nlp_result, keywords_nlp_result, tags, tags_matched)
+
+    def extract_relevant_items(self, api_name, api_response):
+        return break_string_sequence_to_words({e['text'] for e in api_response[api_name] if
+                                               float(e['relevance']) >= self.relevance_threshold})
+
+    def do_nlp(self, item):
+        entities_nlp_result = self.alchemy_api.entities(URL_FLAVOUR, item.get_url(), options={'sentiment': 1})
+        keywords_nlp_result = self.alchemy_api.keywords(URL_FLAVOUR, item.get_url(), options={'sentiment': 1})
+        concepts_nlp_result = self.alchemy_api.concepts(URL_FLAVOUR, item.get_url())
+        return entities_nlp_result, keywords_nlp_result, concepts_nlp_result
+
+    @staticmethod
+    def update_item(item, entities_nlp_result, concepts_nlp_result, keywords_nlp_result, tags, tags_matched):
         item['entities_nlp_result'] = entities_nlp_result
         item['keywords_nlp_result'] = keywords_nlp_result
         item['concepts_nlp_result'] = concepts_nlp_result
         item['tags'] = tags
         item['tags_matched'] = tags_matched
-
         return item
