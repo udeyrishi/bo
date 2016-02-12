@@ -11,7 +11,8 @@ BOT_NAME = 'bo'
 SPIDER_MODULES = ['bo.spiders']
 NEWSPIDER_MODULE = 'bo.spiders'
 ITEM_PIPELINES = {
-    'bo.pipelines.alchemy_nlp_pipeline.RelevanceFilter': 0
+    'bo.pipelines.alchemy_nlp_pipeline.RelevanceFilter': 0,
+    'bo.pipelines.alchemy_nlp_pipeline.OverallSentimentAnalyser': 1
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

@@ -45,32 +45,41 @@ class AlchemyNLPPipeline(object):
 
 
 class RelevanceFilter(AlchemyNLPPipeline):
-    def process_item(self, web_page_item, spider):
-        entities_nlp_result, keywords_nlp_result, concepts_nlp_result = self.do_nlp(web_page_item)
-
-        relevant_entities = self.extract_relevant_items('entities', entities_nlp_result)
-        relevant_keywords = self.extract_relevant_items('keywords', keywords_nlp_result)
-        relevant_concepts = self.extract_relevant_items('concepts', concepts_nlp_result)
-
-        tags = relevant_entities.union(relevant_keywords, relevant_concepts)
-        tags_matched = tags.intersection(self.tags)
+    def process_item(self, bo_pipeline_item, spider):
+        entities_nlp_result, keywords_nlp_result, concepts_nlp_result = self.do_nlp(bo_pipeline_item)
+        web_page_tags = self.extract_tags(concepts_nlp_result, entities_nlp_result, keywords_nlp_result)
+        tags_matched = web_page_tags.intersection(self.tags)
 
         if len(tags_matched) < self.tag_match_threshold:
             raise DropItem("Dropping page '{0}' because tag match count = {1} < threshold = {2}"
-                           .format(web_page_item.get_url(), len(tags_matched), self.tag_match_threshold))
+                           .format(bo_pipeline_item.get_url(), len(tags_matched), self.tag_match_threshold))
 
-        return web_page_item.update_item(entities_nlp_result=entities_nlp_result,
-                                         concepts_nlp_result=concepts_nlp_result,
-                                         keywords_nlp_result=keywords_nlp_result,
-                                         tags=tags,
-                                         tags_matched=tags_matched)
+        return bo_pipeline_item.update_item(entities_nlp_result=entities_nlp_result,
+                                            concepts_nlp_result=concepts_nlp_result,
+                                            keywords_nlp_result=keywords_nlp_result,
+                                            tags=web_page_tags,
+                                            tags_matched=tags_matched)
+
+    def extract_tags(self, concepts_nlp_result, entities_nlp_result, keywords_nlp_result):
+        relevant_entities = self.extract_relevant_items('entities', entities_nlp_result)
+        relevant_keywords = self.extract_relevant_items('keywords', keywords_nlp_result)
+        relevant_concepts = self.extract_relevant_items('concepts', concepts_nlp_result)
+        return relevant_entities.union(relevant_keywords, relevant_concepts)
 
     def extract_relevant_items(self, api_name, api_response):
         return break_string_sequence_to_words({e['text'] for e in api_response[api_name] if
                                                float(e['relevance']) >= self.relevance_threshold})
 
-    def do_nlp(self, item):
-        entities_nlp_result = self.alchemy_api.entities(URL_FLAVOUR, item.get_url(), options={'sentiment': 1})
-        keywords_nlp_result = self.alchemy_api.keywords(URL_FLAVOUR, item.get_url(), options={'sentiment': 1})
-        concepts_nlp_result = self.alchemy_api.concepts(URL_FLAVOUR, item.get_url())
+    def do_nlp(self, bo_pipeline_item):
+        entities_nlp_result = self.alchemy_api.entities(URL_FLAVOUR, bo_pipeline_item.get_url(),
+                                                        options={'sentiment': 1})
+        keywords_nlp_result = self.alchemy_api.keywords(URL_FLAVOUR, bo_pipeline_item.get_url(),
+                                                        options={'sentiment': 1})
+        concepts_nlp_result = self.alchemy_api.concepts(URL_FLAVOUR, bo_pipeline_item.get_url())
         return entities_nlp_result, keywords_nlp_result, concepts_nlp_result
+
+
+class OverallSentimentAnalyser(AlchemyNLPPipeline):
+    def process_item(self, bo_pipeline_item, spider):
+        sentiment_nlp_result = self.alchemy_api.sentiment(URL_FLAVOUR, bo_pipeline_item.get_url())
+        return bo_pipeline_item.update_item(sentiment_nlp_result=sentiment_nlp_result)

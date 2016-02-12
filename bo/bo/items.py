@@ -19,6 +19,9 @@ class BoPipelineItem(scrapy.Item):
     tags = scrapy.Field()
     tags_matched = scrapy.Field()
 
+    # OverallSentimentAnalyser
+    sentiment_nlp_result = scrapy.Field()
+
     def get_url(self):
         return self['html_response'].url
 
