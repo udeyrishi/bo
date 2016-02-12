@@ -54,11 +54,12 @@ class RelevanceFilter(AlchemyNLPPipeline):
             raise DropItem("Dropping page '{0}' because tag match count = {1} < threshold = {2}"
                            .format(bo_pipeline_item.get_url(), len(tags_matched), self.tag_match_threshold))
 
-        return bo_pipeline_item.update_item(entities_nlp_result=entities_nlp_result,
-                                            concepts_nlp_result=concepts_nlp_result,
-                                            keywords_nlp_result=keywords_nlp_result,
-                                            tags=web_page_tags,
-                                            tags_matched=tags_matched)
+        bo_pipeline_item.update(entities_nlp_result=entities_nlp_result,
+                                concepts_nlp_result=concepts_nlp_result,
+                                keywords_nlp_result=keywords_nlp_result,
+                                tags=web_page_tags,
+                                tags_matched=tags_matched)
+        return bo_pipeline_item
 
     def extract_tags(self, concepts_nlp_result, entities_nlp_result, keywords_nlp_result):
         relevant_entities = self.extract_relevant_items('entities', entities_nlp_result)
@@ -82,4 +83,5 @@ class RelevanceFilter(AlchemyNLPPipeline):
 class OverallSentimentAnalyser(AlchemyNLPPipeline):
     def process_item(self, bo_pipeline_item, spider):
         sentiment_nlp_result = self.alchemy_api.sentiment(URL_FLAVOUR, bo_pipeline_item.get_url())
-        return bo_pipeline_item.update_item(sentiment_nlp_result=sentiment_nlp_result)
+        bo_pipeline_item.update(sentiment_nlp_result=sentiment_nlp_result)
+        return bo_pipeline_item

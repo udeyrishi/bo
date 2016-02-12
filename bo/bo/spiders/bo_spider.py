@@ -102,4 +102,6 @@ class BoSpider(CrawlSpider):
 
     @staticmethod
     def parse_response(response):
-        return BoPipelineItem().update_item(html_response=response)
+        item = BoPipelineItem()
+        item.update(html_response=response)
+        return item

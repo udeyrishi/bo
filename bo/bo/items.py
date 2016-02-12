@@ -25,24 +25,9 @@ class BoPipelineItem(scrapy.Item):
     def get_url(self):
         return self['html_response'].url
 
-    def update_item(self, **kwargs):
-        """
-        Updates the item with the key value pairs in kwargs.
-        :param kwargs: The key value pair arguments to be added to the item.
-        :return: self
 
-        >>> item = BoPipelineItem()
-        >>> item = item.update_item(html_response = 'http://www.foo.com/')
-        >>> item['html_response']
-        'http://www.foo.com/'
-
-        >>> try:
-        ...     item = item.update_item(random_key = 12)
-        ...     False
-        ... except KeyError:
-        ...     True
-        True
-        """
-        for field, value in kwargs.items():
-            self[field] = value
-        return self
+class BoPackagedItem(scrapy.Item):
+    url = scrapy.Field()
+    tags = scrapy.Field()
+    language = scrapy.Field()
+    doc_sentiment = scrapy.Field()
