@@ -45,8 +45,8 @@ class AlchemyNLPPipeline(object):
 
 
 class RelevanceFilter(AlchemyNLPPipeline):
-    def process_item(self, item, spider):
-        entities_nlp_result, keywords_nlp_result, concepts_nlp_result = self.do_nlp(item)
+    def process_item(self, web_page_item, spider):
+        entities_nlp_result, keywords_nlp_result, concepts_nlp_result = self.do_nlp(web_page_item)
 
         relevant_entities = self.extract_relevant_items('entities', entities_nlp_result)
         relevant_keywords = self.extract_relevant_items('keywords', keywords_nlp_result)
@@ -57,9 +57,13 @@ class RelevanceFilter(AlchemyNLPPipeline):
 
         if len(tags_matched) < self.tag_match_threshold:
             raise DropItem("Dropping page '{0}' because tag match count = {1} < threshold = {2}"
-                           .format(item.get_url(), len(tags_matched), self.tag_match_threshold))
+                           .format(web_page_item.get_url(), len(tags_matched), self.tag_match_threshold))
 
-        return self.update_item(item, entities_nlp_result, concepts_nlp_result, keywords_nlp_result, tags, tags_matched)
+        return web_page_item.update_item(entities_nlp_result=entities_nlp_result,
+                                         concepts_nlp_result=concepts_nlp_result,
+                                         keywords_nlp_result=keywords_nlp_result,
+                                         tags=tags,
+                                         tags_matched=tags_matched)
 
     def extract_relevant_items(self, api_name, api_response):
         return break_string_sequence_to_words({e['text'] for e in api_response[api_name] if
@@ -70,12 +74,3 @@ class RelevanceFilter(AlchemyNLPPipeline):
         keywords_nlp_result = self.alchemy_api.keywords(URL_FLAVOUR, item.get_url(), options={'sentiment': 1})
         concepts_nlp_result = self.alchemy_api.concepts(URL_FLAVOUR, item.get_url())
         return entities_nlp_result, keywords_nlp_result, concepts_nlp_result
-
-    @staticmethod
-    def update_item(item, entities_nlp_result, concepts_nlp_result, keywords_nlp_result, tags, tags_matched):
-        item['entities_nlp_result'] = entities_nlp_result
-        item['keywords_nlp_result'] = keywords_nlp_result
-        item['concepts_nlp_result'] = concepts_nlp_result
-        item['tags'] = tags
-        item['tags_matched'] = tags_matched
-        return item
