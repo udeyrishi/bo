@@ -125,8 +125,10 @@ class RelevanceFiltrationStage(AlchemyNLPStage):
         return bo_pipeline_item
 
 
-class PageSentimentAnalysisStage(AlchemyNLPStage):
+class PageOverallAnalysisStage(AlchemyNLPStage):
     def process_item(self, bo_pipeline_item, spider):
         sentiment_nlp_result = self.alchemy_api.sentiment(URL_FLAVOUR, bo_pipeline_item.get_url())
-        bo_pipeline_item.update(sentiment_nlp_result=sentiment_nlp_result)
+        category_nlp_result = self.alchemy_api.category(URL_FLAVOUR, bo_pipeline_item.get_url())
+        bo_pipeline_item.update(sentiment_nlp_result=sentiment_nlp_result,
+                                category_nlp_result=category_nlp_result)
         return bo_pipeline_item

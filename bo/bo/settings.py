@@ -15,7 +15,7 @@ ITEM_PIPELINES = {
     'bo.pipelines.alchemy_nlp_pipeline.NLPPerformingStage': 0,
     'bo.pipelines.alchemy_nlp_pipeline.TagAnalysisStage': 1,
     'bo.pipelines.alchemy_nlp_pipeline.RelevanceFiltrationStage': 2,
-    'bo.pipelines.alchemy_nlp_pipeline.PageSentimentAnalysisStage': 3,
+    'bo.pipelines.alchemy_nlp_pipeline.PageOverallAnalysisStage': 3,
     'bo.pipelines.storage_pipeline.PackagingPipeline': 4,
     # 'bo.pipelines.storage_pipeline.FileStorageStage': 4.5,
 }

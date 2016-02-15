@@ -10,6 +10,7 @@ class PackagingPipeline(object):
         packaged_item = BoPackagedItem()
         packaged_item['url'] = bo_pipeline_item.get_url()
         packaged_item['language'] = bo_pipeline_item['sentiment_nlp_result']['language']
+        packaged_item['category'] = bo_pipeline_item['category_nlp_result']['category']
         packaged_item['doc_sentiment'] = self.cleanup_doc_sentiment(
                 bo_pipeline_item['sentiment_nlp_result']['docSentiment'])
         packaged_item['tags'] = bo_pipeline_item['tags']
