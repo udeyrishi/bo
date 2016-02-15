@@ -2,7 +2,7 @@
 START_URLS_FILE = './urls.csv'
 TAGS_FILE = './keywords.txt'
 # WARNING: Don't leave the API key in the settings when committing!
-ALCHEMY_API_KEY = 'xxxxxxxxxxxxxxxxxxxx'
+ALCHEMY_API_KEY = 'xxx'
 TAG_MATCH_THRESHOLD = 5
 RELEVANCE_THRESHOLD = 0.5
 ##############################################################
@@ -11,8 +11,11 @@ BOT_NAME = 'bo'
 SPIDER_MODULES = ['bo.spiders']
 NEWSPIDER_MODULE = 'bo.spiders'
 ITEM_PIPELINES = {
-    'bo.pipelines.alchemy_nlp_pipeline.RelevanceFilter': 0,
-    'bo.pipelines.alchemy_nlp_pipeline.OverallSentimentAnalyser': 1
+    'bo.pipelines.alchemy_nlp_pipeline.NLPPerformer': 0,
+    'bo.pipelines.alchemy_nlp_pipeline.TagAnalyzer': 1,
+    'bo.pipelines.alchemy_nlp_pipeline.RelevanceFilter': 2,
+    'bo.pipelines.alchemy_nlp_pipeline.OverallSentimentAnalyser': 3,
+    #'bo.pipelines.packaging_pipeline.PackagingPipeline': 4
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
