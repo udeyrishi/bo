@@ -13,7 +13,7 @@ URL_FLAVOUR = 'url'
 TAG_MATCHED_KEY = 'matched'
 
 
-class AlchemyNLPPipeline(object):
+class AlchemyNLPStage(object):
     def __init__(self, alchemy_api_key, tags_file, tag_match_threshold, relevance_threshold):
         self.alchemy_api = AlchemyAPI(alchemy_api_key)
         self.tags = self.read_tags_from_file(tags_file)
@@ -45,7 +45,7 @@ class AlchemyNLPPipeline(object):
         return tags
 
 
-class NLPPerformer(AlchemyNLPPipeline):
+class NLPPerformingStage(AlchemyNLPStage):
     def process_item(self, bo_pipeline_item, spider):
         entities_nlp_result, keywords_nlp_result, concepts_nlp_result = self.do_nlp(bo_pipeline_item)
         bo_pipeline_item.update(entities_nlp_result=entities_nlp_result,
@@ -62,7 +62,7 @@ class NLPPerformer(AlchemyNLPPipeline):
         return entities_nlp_result, keywords_nlp_result, concepts_nlp_result
 
 
-class TagAnalyzer(AlchemyNLPPipeline):
+class TagAnalysisStage(AlchemyNLPStage):
     def process_item(self, bo_pipeline_item, spider):
         web_page_tags = self.extract_tags_from_nlp_results(concepts=bo_pipeline_item['concepts_nlp_result'],
                                                            entities=bo_pipeline_item['entities_nlp_result'],
@@ -113,7 +113,7 @@ class TagAnalyzer(AlchemyNLPPipeline):
              float(e['relevance']) >= self.relevance_threshold}
 
 
-class RelevanceFilter(AlchemyNLPPipeline):
+class RelevanceFiltrationStage(AlchemyNLPStage):
     def process_item(self, bo_pipeline_item, spider):
         tags = bo_pipeline_item['tags']
         match_count = conditional_count(tags, lambda tag: tags[tag][TAG_MATCHED_KEY] != 'no')
@@ -125,7 +125,7 @@ class RelevanceFilter(AlchemyNLPPipeline):
         return bo_pipeline_item
 
 
-class OverallSentimentAnalyser(AlchemyNLPPipeline):
+class PageSentimentAnalysisStage(AlchemyNLPStage):
     def process_item(self, bo_pipeline_item, spider):
         sentiment_nlp_result = self.alchemy_api.sentiment(URL_FLAVOUR, bo_pipeline_item.get_url())
         bo_pipeline_item.update(sentiment_nlp_result=sentiment_nlp_result)

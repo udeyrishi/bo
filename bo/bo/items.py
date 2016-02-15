@@ -9,16 +9,13 @@ import scrapy
 
 
 class BoPipelineItem(scrapy.Item):
-    # HTTP request results
     html_response = scrapy.Field()
 
-    # RelevanceFilter results
     entities_nlp_result = scrapy.Field()
     keywords_nlp_result = scrapy.Field()
     concepts_nlp_result = scrapy.Field()
     tags = scrapy.Field()
 
-    # OverallSentimentAnalyser
     sentiment_nlp_result = scrapy.Field()
 
     def get_url(self):

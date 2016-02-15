@@ -11,11 +11,11 @@ BOT_NAME = 'bo'
 SPIDER_MODULES = ['bo.spiders']
 NEWSPIDER_MODULE = 'bo.spiders'
 ITEM_PIPELINES = {
-    'bo.pipelines.alchemy_nlp_pipeline.NLPPerformer': 0,
-    'bo.pipelines.alchemy_nlp_pipeline.TagAnalyzer': 1,
-    'bo.pipelines.alchemy_nlp_pipeline.RelevanceFilter': 2,
-    'bo.pipelines.alchemy_nlp_pipeline.OverallSentimentAnalyser': 3,
-    'bo.pipelines.packaging_pipeline.PackagingPipeline': 4
+    'bo.pipelines.alchemy_nlp_pipeline.NLPPerformingStage': 0,
+    'bo.pipelines.alchemy_nlp_pipeline.TagAnalysisStage': 1,
+    'bo.pipelines.alchemy_nlp_pipeline.RelevanceFiltrationStage': 2,
+    'bo.pipelines.alchemy_nlp_pipeline.PageSentimentAnalysisStage': 3,
+    'bo.pipelines.storage_pipeline.PackagingPipeline': 4
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
