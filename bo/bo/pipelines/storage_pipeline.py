@@ -85,5 +85,5 @@ class MongoStorageStage(object):
     def process_item(self, item, spider):
         post_id = self.db[self.collection_name].insert(dict(item))
         raise DropItem(
-                "URL '{0}' successfully crawled and info stored in MongoDB with post ID '{1}'".format(item.url,
+                "URL '{0}' successfully crawled and info stored in MongoDB with post ID '{1}'".format(item['url'],
                                                                                                       post_id))
