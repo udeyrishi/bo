@@ -29,3 +29,7 @@ def break_string_sequence_to_words(seq):
     True
     """
     return {word for string in seq for word in string.split()}
+
+
+def conditional_count(seq, condition_func):
+    return sum(1 for i in seq if condition_func(i))

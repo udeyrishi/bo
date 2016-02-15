@@ -17,7 +17,6 @@ class BoPipelineItem(scrapy.Item):
     keywords_nlp_result = scrapy.Field()
     concepts_nlp_result = scrapy.Field()
     tags = scrapy.Field()
-    tags_matched = scrapy.Field()
 
     # OverallSentimentAnalyser
     sentiment_nlp_result = scrapy.Field()
@@ -28,6 +27,6 @@ class BoPipelineItem(scrapy.Item):
 
 class BoPackagedItem(scrapy.Item):
     url = scrapy.Field()
-    tags = scrapy.Field()
     language = scrapy.Field()
     doc_sentiment = scrapy.Field()
+    tags = scrapy.Field()
