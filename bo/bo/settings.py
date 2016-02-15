@@ -5,6 +5,7 @@ TAGS_FILE = './keywords.txt'
 ALCHEMY_API_KEY = 'xxx'
 TAG_MATCH_THRESHOLD = 5
 RELEVANCE_THRESHOLD = 0.5
+OUTPUT_FILE = 'output.debug.json'
 ##############################################################
 
 BOT_NAME = 'bo'
@@ -15,7 +16,8 @@ ITEM_PIPELINES = {
     'bo.pipelines.alchemy_nlp_pipeline.TagAnalysisStage': 1,
     'bo.pipelines.alchemy_nlp_pipeline.RelevanceFiltrationStage': 2,
     'bo.pipelines.alchemy_nlp_pipeline.PageSentimentAnalysisStage': 3,
-    'bo.pipelines.storage_pipeline.PackagingPipeline': 4
+    'bo.pipelines.storage_pipeline.PackagingPipeline': 4,
+    # 'bo.pipelines.storage_pipeline.FileStorageStage': 4.5,
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

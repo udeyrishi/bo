@@ -1,4 +1,8 @@
+import json
+
 from bo.items import BoPackagedItem
+
+OUTPUT_FILE = 'OUTPUT_FILE'
 
 
 class PackagingPipeline(object):
@@ -19,3 +23,25 @@ class PackagingPipeline(object):
             'score': float(doc_sentiment['score']),
             'type': doc_sentiment['type']
         }
+
+
+class FileStorageStage(object):
+    def __init__(self, output_file):
+        self.file_name = output_file if output_file is not None else 'default_output.debug.json'
+        self.file = None
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        output_file = crawler.settings.get(OUTPUT_FILE)
+        return cls(output_file)
+
+    def open_spider(self, spider):
+        self.file = open(self.file_name, 'w')
+
+    def close_spider(self, spider):
+        self.file.close()
+
+    def process_item(self, packaged_item, spider):
+        line = json.dumps(dict(packaged_item), indent=4) + "\n"
+        self.file.write(line)
+        return packaged_item
