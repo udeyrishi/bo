@@ -15,7 +15,7 @@ ITEM_PIPELINES = {
     'bo.pipelines.alchemy_nlp_pipeline.TagAnalyzer': 1,
     'bo.pipelines.alchemy_nlp_pipeline.RelevanceFilter': 2,
     'bo.pipelines.alchemy_nlp_pipeline.OverallSentimentAnalyser': 3,
-    #'bo.pipelines.packaging_pipeline.PackagingPipeline': 4
+    'bo.pipelines.packaging_pipeline.PackagingPipeline': 4
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
