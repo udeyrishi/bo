@@ -1,4 +1,5 @@
 import json
+import logging
 
 import pymongo
 from scrapy.exceptions import DropItem
@@ -77,13 +78,21 @@ class MongoStorageStage(object):
 
     def open_spider(self, spider):
         self.client = pymongo.MongoClient(self.mongo_uri)
-        self.db = self.client[self.mongo_db]
+        self.db = self.client[self.mongo_db][self.collection_name]
 
     def close_spider(self, spider):
         self.client.close()
 
     def process_item(self, item, spider):
-        post_id = self.db[self.collection_name].insert(dict(item))
+        collision = self.db.find_one({'url': item['url']})
+        if collision is None:
+            post_id = self.db.insert(dict(item))
+        else:
+            self.db.replace_one({'url': item['url']}, dict(item))
+            post_id = collision['_id']
+            logging.info(
+                "URL: '{0}' was already stored in MongoDB at ID: '{1}'. Will be replaced.".format(item['url'], post_id))
+
         raise DropItem(
                 "URL '{0}' successfully crawled and info stored in MongoDB with post ID '{1}'".format(item['url'],
                                                                                                       post_id))
