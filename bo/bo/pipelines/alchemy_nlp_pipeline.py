@@ -10,6 +10,7 @@ TAGS_FILE = 'TAGS_FILE'
 TAG_MATCH_THRESHOLD = 'TAG_MATCH_THRESHOLD'
 RELEVANCE_THRESHOLD = 'RELEVANCE_THRESHOLD'
 URL_FLAVOUR = 'url'
+TAG_MATCHED_KEY = 'matched'
 
 
 class AlchemyNLPPipeline(object):
@@ -39,7 +40,7 @@ class AlchemyNLPPipeline(object):
         with open(tags_file, 'r') as f:
             for line in f:
                 tag = line.strip()
-                if tag is not '':
+                if tag != '':
                     tags.add(tag)
         return tags
 
@@ -66,42 +67,56 @@ class TagAnalyzer(AlchemyNLPPipeline):
         web_page_tags = self.extract_tags_from_nlp_results(concepts=bo_pipeline_item['concepts_nlp_result'],
                                                            entities=bo_pipeline_item['entities_nlp_result'],
                                                            keywords=bo_pipeline_item['keywords_nlp_result'])
-        categorized_tags = self.categorize_web_page_tags(web_page_tags)
-
-        bo_pipeline_item.update(tags=categorized_tags)
+        self.append_matching_status(web_page_tags)
+        bo_pipeline_item.update(tags=web_page_tags)
         return bo_pipeline_item
 
-    def categorize_web_page_tags(self, web_page_tags):
-        matches = {match: 'yes' for match in web_page_tags.intersection(self.tags)}
+    def append_matching_status(self, web_page_tags):
+        leftover = set()
+        for tag in web_page_tags:
+            if tag in self.tags:
+                web_page_tags[tag][TAG_MATCHED_KEY] = 'yes'
+            else:
+                leftover.add(tag)
 
-        # Find all the leftover tags (that weren't matched completely), and break them into single words if
-        # they are compound tags (multi-word tags)
-        leftover_web_page_tags = break_string_sequence_to_words(
-                {tag for tag in web_page_tags if tag not in matches.keys()})
-        leftover_target_tags = break_string_sequence_to_words(
-                {tag for tag in self.tags if tag not in matches.keys()})
+        target_tag_words = break_string_sequence_to_words(self.tags)
 
-        partial_matches = {match: 'partial' for match in leftover_web_page_tags.intersection(leftover_target_tags)}
-        misses = {tag: 'no' for tag in leftover_web_page_tags if tag not in partial_matches.keys()}
-        matches.update(partial_matches)
-        matches.update(misses)
-        return matches
+        for tag in leftover:
+            for partial_tag in tag.split():
+                if partial_tag in target_tag_words:
+                    web_page_tags[tag][TAG_MATCHED_KEY] = 'partial'
+                    break
+            if TAG_MATCHED_KEY not in web_page_tags[tag]:
+                web_page_tags[tag][TAG_MATCHED_KEY] = 'no'
 
     def extract_tags_from_nlp_results(self, **nlp_result_kwargs):
-        tags = set()
+        # WARNING: This approach will overwrite previously encountered tag name by a later one, if multiple
+        # entries in nlp_result_kwargs have tags with same text
+        # TODO: Fix above by averaging the collisions
+        tags = dict()
         for api_name, nlp_result in nlp_result_kwargs.items():
-            tags = tags.union(self.extract_relevant_items(api_name, nlp_result))
+            tags.update(self.extract_relevant_items(api_name, nlp_result))
+
         return tags
 
     def extract_relevant_items(self, api_name, api_response):
-        return {e['text'] for e in api_response[api_name] if
-                float(e['relevance']) >= self.relevance_threshold}
+        return \
+            {e['text']: {
+                'count': int(e['count']) if 'count' in e else None,
+                'relevance': float(e['relevance']),
+                'sentiment': None if 'sentiment' not in e else (
+                    0 if e['sentiment']['type'] == 'neutral' else float(e['sentiment']['score'])),
+                'mixed': None if 'sentiment' not in e else (
+                    False if 'mixed' not in e['sentiment'] else float(e['sentiment']['mixed']) == 1)
+            }
+             for e in api_response[api_name] if
+             float(e['relevance']) >= self.relevance_threshold}
 
 
 class RelevanceFilter(AlchemyNLPPipeline):
     def process_item(self, bo_pipeline_item, spider):
         tags = bo_pipeline_item['tags']
-        match_count = conditional_count(tags, lambda tag: tags[tag] is not 'no')
+        match_count = conditional_count(tags, lambda tag: tags[tag][TAG_MATCHED_KEY] != 'no')
 
         if match_count < self.tag_match_threshold:
             raise DropItem("Dropping page '{0}' because tag match count = {1} < threshold = {2}"
