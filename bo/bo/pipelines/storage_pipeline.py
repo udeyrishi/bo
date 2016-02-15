@@ -26,7 +26,7 @@ class PackagingPipeline(object):
         }
 
 
-class FileStorageStage(object):
+class JsonFileWriterStage(object):
     def __init__(self, output_file):
         self.file_name = output_file if output_file is not None else 'default_output.debug.json'
         self.file = None
@@ -46,3 +46,4 @@ class FileStorageStage(object):
         line = json.dumps(dict(packaged_item), indent=4) + "\n"
         self.file.write(line)
         return packaged_item
+
