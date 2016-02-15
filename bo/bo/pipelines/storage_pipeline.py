@@ -1,7 +1,15 @@
 import json
 
-from bo.items import BoPackagedItem
+import pymongo
+from scrapy.exceptions import DropItem
 
+from bo.items import BoPackagedItem
+from bo.utils import preconditions
+from bo.utils.exceptions import BoSettingsError
+
+MONGO_DATABASE = 'MONGO_DATABASE'
+MONGO_URI = 'MONGO_URI'
+MONGO_COLLECTION_NAME = 'MONGO_COLLECTION_NAME'
 OUTPUT_FILE = 'OUTPUT_FILE'
 
 
@@ -47,3 +55,35 @@ class JsonFileWriterStage(object):
         self.file.write(line)
         return packaged_item
 
+
+class MongoStorageStage(object):
+    def __init__(self, mongo_uri, mongo_db, collection_name):
+        self.mongo_uri = mongo_uri
+        self.mongo_db = mongo_db
+        self.collection_name = collection_name
+        self.client = None
+        self.db = None
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        mongo_uri = preconditions.check_not_none_or_whitespace(crawler.settings.get(MONGO_URI), MONGO_URI,
+                                                               exception=BoSettingsError)
+        mongo_db = preconditions.check_not_none_or_whitespace(crawler.settings.get(MONGO_DATABASE), MONGO_DATABASE,
+                                                              exception=BoSettingsError)
+        collection_name = preconditions.check_not_none_or_whitespace(crawler.settings.get(MONGO_COLLECTION_NAME),
+                                                                     MONGO_COLLECTION_NAME, exception=BoSettingsError)
+
+        return cls(mongo_uri=mongo_uri, mongo_db=mongo_db, collection_name=collection_name)
+
+    def open_spider(self, spider):
+        self.client = pymongo.MongoClient(self.mongo_uri)
+        self.db = self.client[self.mongo_db]
+
+    def close_spider(self, spider):
+        self.client.close()
+
+    def process_item(self, item, spider):
+        post_id = self.db[self.collection_name].insert(dict(item))
+        raise DropItem(
+                "URL '{0}' successfully crawled and info stored in MongoDB with post ID '{1}'".format(item.url,
+                                                                                                      post_id))

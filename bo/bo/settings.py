@@ -5,8 +5,11 @@ TAGS_FILE = './keywords.txt'
 ALCHEMY_API_KEY = 'xxx'
 TAG_MATCH_THRESHOLD = 5
 RELEVANCE_THRESHOLD = 0.5
+MONGO_DATABASE = 'bo_db'
+MONGO_URI = 'mongodb://localhost:27017/'
+MONGO_COLLECTION_NAME = 'bo_items'
 OUTPUT_FILE = 'output.debug.json'
-##############################################################
+###############################################################
 
 BOT_NAME = 'bo'
 SPIDER_MODULES = ['bo.spiders']
@@ -18,6 +21,7 @@ ITEM_PIPELINES = {
     'bo.pipelines.alchemy_nlp_pipeline.PageOverallAnalysisStage': 3,
     'bo.pipelines.storage_pipeline.PackagingPipeline': 4,
     # 'bo.pipelines.storage_pipeline.JsonFileWriterStage': 4.5,
+    'bo.pipelines.storage_pipeline.MongoStorageStage': 5
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

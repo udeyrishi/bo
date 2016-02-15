@@ -27,8 +27,8 @@ class AlchemyNLPStage(object):
         tag_match_threshold = crawler.settings.getint(TAG_MATCH_THRESHOLD, default=None)
         relevance_threshold = crawler.settings.getfloat(RELEVANCE_THRESHOLD, default=None)
 
-        preconditions.check_not_none(api_key, ALCHEMY_API_KEY, exception=BoSettingsError)
-        preconditions.check_not_none(tags_file, TAGS_FILE, exception=BoSettingsError)
+        preconditions.check_not_none_or_whitespace(api_key, ALCHEMY_API_KEY, exception=BoSettingsError)
+        preconditions.check_not_none_or_whitespace(tags_file, TAGS_FILE, exception=BoSettingsError)
         preconditions.check_not_none(tag_match_threshold, TAG_MATCH_THRESHOLD, exception=BoSettingsError)
         preconditions.check_not_none(relevance_threshold, RELEVANCE_THRESHOLD, exception=BoSettingsError)
 
