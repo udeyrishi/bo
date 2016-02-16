@@ -103,8 +103,14 @@ class BoSpider(CrawlSpider):
     def parse_response(self, response):
         item = BoPipelineItem()
         item.update(html_response=response)
-        domain = urlparse(item.get_url()).netloc
-        metadata = self.url_metadata.get(domain)
+        url_obj = urlparse(item.get_url())
+        domain = url_obj.netloc
+
+        metadata = self.url_metadata.get(domain) or self.url_metadata.get(
+            domain.replace('www.', '')) or self.url_metadata.get(
+            domain.replace('{0}://'.format(url_obj.scheme), '')) or self.url_metadata.get(
+            domain.replace('{0}://www.'.format(url_obj.scheme), ''))
+
         item.update(metadata=metadata)
 
         return item
