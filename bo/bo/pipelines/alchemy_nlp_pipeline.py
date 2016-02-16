@@ -127,8 +127,10 @@ class TagAnalysisStage(AlchemyNLPStage):
         return tags
 
     def extract_relevant_items(self, api_name, api_response):
+        # Remove any periods in the tag name (e['text']), because MongoDB doesn't allow keys to have periods in them
+        # This doesn't really affect anything, because a random period doesn't mean anything
         return \
-            {e['text']: {
+            {e['text'].replace('.', ''): {
                 'count': int(e['count']) if 'count' in e else None,
                 'relevance': float(e['relevance']),
                 'sentiment': None if 'sentiment' not in e else (
