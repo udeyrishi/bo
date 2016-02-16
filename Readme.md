@@ -1,4 +1,7 @@
 #Bo
+
+![](https://raw.githubusercontent.com/udeyrishi/bo/master/logo.png)
+
 Bo is a sentiment analysis web crawler that crawls all the webpages that it can find starting at the configured root URLs, and then analyses the sentiments on these pages. The bundled sentiment and tag info can then be further stored/processed for downstream actions.
 
 Bo stays on the same domains as the root URLs, so as to get the results only from the specified websites. This prevents Bo from wandering off into unwanted locations on the web.
