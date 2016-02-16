@@ -14,15 +14,18 @@ TAGS_FILE = 'TAGS_FILE'
 TAG_MATCH_THRESHOLD = 'TAG_MATCH_THRESHOLD'
 RELEVANCE_THRESHOLD = 'RELEVANCE_THRESHOLD'
 ALCHEMY_API_RETRY_DELAY_MINUTES = 'ALCHEMY_API_RETRY_DELAY_MINUTES'
+CASE_INSENSITIVE_TAGS = 'CASE_INSENSITIVE_TAGS'
 URL_FLAVOUR = 'url'
 TAG_MATCHED_KEY = 'matched'
 
 
 class AlchemyNLPStage(object):
-    def __init__(self, alchemy_api_key, tags_file, tag_match_threshold, relevance_threshold, api_retry_delay_minutes):
+    def __init__(self, alchemy_api_key, tags_file, tag_match_threshold, case_insensitive_tags, relevance_threshold,
+                 api_retry_delay_minutes):
         self.alchemy_api = AlchemyAPI(alchemy_api_key)
         self.tags = self.read_tags_from_file(tags_file)
         self.tag_match_threshold = tag_match_threshold
+        self.case_insensitive_tags = case_insensitive_tags
         self.relevance_threshold = relevance_threshold
         self.api_retry_delay_minutes = api_retry_delay_minutes
 
@@ -33,6 +36,7 @@ class AlchemyNLPStage(object):
         tag_match_threshold = crawler.settings.getint(TAG_MATCH_THRESHOLD, default=None)
         relevance_threshold = crawler.settings.getfloat(RELEVANCE_THRESHOLD, default=None)
         api_retry_delay_minutes = crawler.settings.getint(ALCHEMY_API_RETRY_DELAY_MINUTES, default=None)
+        case_insensitive_tags = crawler.settings.getbool(CASE_INSENSITIVE_TAGS, default=None)
 
         preconditions.check_not_none_or_whitespace(api_key, ALCHEMY_API_KEY, exception=BoSettingsError)
         preconditions.check_not_none_or_whitespace(tags_file, TAGS_FILE, exception=BoSettingsError)
@@ -40,15 +44,16 @@ class AlchemyNLPStage(object):
         preconditions.check_not_none(relevance_threshold, RELEVANCE_THRESHOLD, exception=BoSettingsError)
         preconditions.check_not_none(api_retry_delay_minutes, ALCHEMY_API_RETRY_DELAY_MINUTES,
                                      exception=BoSettingsError)
+        preconditions.check_not_none(case_insensitive_tags, CASE_INSENSITIVE_TAGS, exception=BoSettingsError)
 
-        return cls(api_key, tags_file, tag_match_threshold, relevance_threshold, api_retry_delay_minutes)
+        return cls(api_key, tags_file, tag_match_threshold, case_insensitive_tags, relevance_threshold,
+                   api_retry_delay_minutes)
 
-    @staticmethod
-    def read_tags_from_file(tags_file):
+    def read_tags_from_file(self, tags_file):
         tags = set()
         with open(tags_file, 'r') as f:
             for line in f:
-                tag = line.strip()
+                tag = line.strip().lower() if self.case_insensitive_tags else line.strip()
                 if tag != '':
                     tags.add(tag)
         return tags
@@ -127,19 +132,23 @@ class TagAnalysisStage(AlchemyNLPStage):
         return tags
 
     def extract_relevant_items(self, api_name, api_response):
+        return \
+            {self.extract_text(item): {
+                'count': int(item['count']) if 'count' in item else None,
+                'relevance': float(item['relevance']),
+                'sentiment': None if 'sentiment' not in item else (
+                    0 if item['sentiment']['type'] == 'neutral' else float(item['sentiment']['score'])),
+                'mixed': None if 'sentiment' not in item else (
+                    False if 'mixed' not in item['sentiment'] else float(item['sentiment']['mixed']) == 1)
+            }
+             for item in api_response[api_name] if
+             float(item['relevance']) >= self.relevance_threshold}
+
+    def extract_text(self, item):
         # Remove any periods in the tag name (e['text']), because MongoDB doesn't allow keys to have periods in them
         # This doesn't really affect anything, because a random period doesn't mean anything
-        return \
-            {e['text'].replace('.', ''): {
-                'count': int(e['count']) if 'count' in e else None,
-                'relevance': float(e['relevance']),
-                'sentiment': None if 'sentiment' not in e else (
-                    0 if e['sentiment']['type'] == 'neutral' else float(e['sentiment']['score'])),
-                'mixed': None if 'sentiment' not in e else (
-                    False if 'mixed' not in e['sentiment'] else float(e['sentiment']['mixed']) == 1)
-            }
-             for e in api_response[api_name] if
-             float(e['relevance']) >= self.relevance_threshold}
+        return item['text'].replace('.', '').lower() if self.case_insensitive_tags else item[
+            'text'].replace('.', '')
 
 
 class RelevanceFiltrationStage(AlchemyNLPStage):

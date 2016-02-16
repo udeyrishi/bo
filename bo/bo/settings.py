@@ -4,6 +4,7 @@ TAGS_FILE = './keywords.txt'
 # WARNING: Don't leave the API key in the settings when committing!
 ALCHEMY_API_KEY = 'xxx'
 TAG_MATCH_THRESHOLD = 5
+CASE_INSENSITIVE_TAGS = True
 RELEVANCE_THRESHOLD = 0.5
 MONGO_DATABASE = 'bo_db'
 MONGO_URI = 'mongodb://localhost:27017/'
