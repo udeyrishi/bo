@@ -23,9 +23,9 @@ class AlchemyNLPStage(object):
     def __init__(self, alchemy_api_key, tags_file, tag_match_threshold, case_insensitive_tags, relevance_threshold,
                  api_retry_delay_minutes):
         self.alchemy_api = AlchemyAPI(alchemy_api_key)
+        self.case_insensitive_tags = case_insensitive_tags
         self.tags = self.read_tags_from_file(tags_file)
         self.tag_match_threshold = tag_match_threshold
-        self.case_insensitive_tags = case_insensitive_tags
         self.relevance_threshold = relevance_threshold
         self.api_retry_delay_minutes = api_retry_delay_minutes
 
