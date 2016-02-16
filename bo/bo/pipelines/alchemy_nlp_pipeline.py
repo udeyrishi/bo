@@ -1,3 +1,7 @@
+import datetime
+import logging
+
+import pause
 from scrapy.exceptions import DropItem
 
 from bo.libs.alchemyapi_python.alchemyapi import AlchemyAPI
@@ -9,16 +13,18 @@ ALCHEMY_API_KEY = 'ALCHEMY_API_KEY'
 TAGS_FILE = 'TAGS_FILE'
 TAG_MATCH_THRESHOLD = 'TAG_MATCH_THRESHOLD'
 RELEVANCE_THRESHOLD = 'RELEVANCE_THRESHOLD'
+ALCHEMY_API_RETRY_DELAY_MINUTES = 'ALCHEMY_API_RETRY_DELAY_MINUTES'
 URL_FLAVOUR = 'url'
 TAG_MATCHED_KEY = 'matched'
 
 
 class AlchemyNLPStage(object):
-    def __init__(self, alchemy_api_key, tags_file, tag_match_threshold, relevance_threshold):
+    def __init__(self, alchemy_api_key, tags_file, tag_match_threshold, relevance_threshold, api_retry_delay_minutes):
         self.alchemy_api = AlchemyAPI(alchemy_api_key)
         self.tags = self.read_tags_from_file(tags_file)
         self.tag_match_threshold = tag_match_threshold
         self.relevance_threshold = relevance_threshold
+        self.api_retry_delay_minutes = api_retry_delay_minutes
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -26,13 +32,16 @@ class AlchemyNLPStage(object):
         tags_file = crawler.settings.get(TAGS_FILE)
         tag_match_threshold = crawler.settings.getint(TAG_MATCH_THRESHOLD, default=None)
         relevance_threshold = crawler.settings.getfloat(RELEVANCE_THRESHOLD, default=None)
+        api_retry_delay_minutes = crawler.settings.getint(ALCHEMY_API_RETRY_DELAY_MINUTES, default=None)
 
         preconditions.check_not_none_or_whitespace(api_key, ALCHEMY_API_KEY, exception=BoSettingsError)
         preconditions.check_not_none_or_whitespace(tags_file, TAGS_FILE, exception=BoSettingsError)
         preconditions.check_not_none(tag_match_threshold, TAG_MATCH_THRESHOLD, exception=BoSettingsError)
         preconditions.check_not_none(relevance_threshold, RELEVANCE_THRESHOLD, exception=BoSettingsError)
+        preconditions.check_not_none(api_retry_delay_minutes, ALCHEMY_API_RETRY_DELAY_MINUTES,
+                                     exception=BoSettingsError)
 
-        return cls(api_key, tags_file, tag_match_threshold, relevance_threshold)
+        return cls(api_key, tags_file, tag_match_threshold, relevance_threshold, api_retry_delay_minutes)
 
     @staticmethod
     def read_tags_from_file(tags_file):
@@ -44,6 +53,23 @@ class AlchemyNLPStage(object):
                     tags.add(tag)
         return tags
 
+    def error_safe_api_executor(self, api_func):
+        result = api_func()
+
+        while result['status'] == 'Error' and result['statusInfo'] == 'daily-transaction-limit-exceeded':
+            wait_until = datetime.datetime.now() + datetime.timedelta(minutes=self.api_retry_delay_minutes)
+
+            logging.info(
+                    "Today's Alchemy API transaction limit reached. Suspending until {0}.".format(
+                            wait_until))
+            pause.until(wait_until)
+            result = api_func()
+
+        if result['status'] == 'Error':
+            raise DropItem("Alchemy returned unknown Error : '{0}'".format(result['statusInfo']))
+
+        return result
+
 
 class NLPPerformingStage(AlchemyNLPStage):
     def process_item(self, bo_pipeline_item, spider):
@@ -54,11 +80,12 @@ class NLPPerformingStage(AlchemyNLPStage):
         return bo_pipeline_item
 
     def do_nlp(self, bo_pipeline_item):
-        entities_nlp_result = self.alchemy_api.entities(URL_FLAVOUR, bo_pipeline_item.get_url(),
-                                                        options={'sentiment': 1})
-        keywords_nlp_result = self.alchemy_api.keywords(URL_FLAVOUR, bo_pipeline_item.get_url(),
-                                                        options={'sentiment': 1})
-        concepts_nlp_result = self.alchemy_api.concepts(URL_FLAVOUR, bo_pipeline_item.get_url())
+        entities_nlp_result = self.error_safe_api_executor(
+                lambda: self.alchemy_api.entities(URL_FLAVOUR, bo_pipeline_item.get_url(), options={'sentiment': 1}))
+        keywords_nlp_result = self.error_safe_api_executor(
+                lambda: self.alchemy_api.keywords(URL_FLAVOUR, bo_pipeline_item.get_url(), options={'sentiment': 1}))
+        concepts_nlp_result = self.error_safe_api_executor(
+                lambda: self.alchemy_api.concepts(URL_FLAVOUR, bo_pipeline_item.get_url()))
         return entities_nlp_result, keywords_nlp_result, concepts_nlp_result
 
 
@@ -127,8 +154,10 @@ class RelevanceFiltrationStage(AlchemyNLPStage):
 
 class PageOverallAnalysisStage(AlchemyNLPStage):
     def process_item(self, bo_pipeline_item, spider):
-        sentiment_nlp_result = self.alchemy_api.sentiment(URL_FLAVOUR, bo_pipeline_item.get_url())
-        category_nlp_result = self.alchemy_api.category(URL_FLAVOUR, bo_pipeline_item.get_url())
+        sentiment_nlp_result = self.error_safe_api_executor(
+                lambda: self.alchemy_api.sentiment(URL_FLAVOUR, bo_pipeline_item.get_url()))
+        category_nlp_result = self.error_safe_api_executor(
+                lambda: self.alchemy_api.category(URL_FLAVOUR, bo_pipeline_item.get_url()))
         bo_pipeline_item.update(sentiment_nlp_result=sentiment_nlp_result,
                                 category_nlp_result=category_nlp_result)
         return bo_pipeline_item

@@ -37,6 +37,12 @@
     $ git submodule init && git submodule update
     ```
 
+6. [Pause](https://pypi.python.org/pypi/pause/0.1.2)
+
+    ```sh
+    python -m pip install pause
+    ```
+
 ###Running
 ```sh
 $ scrapy crawl bo

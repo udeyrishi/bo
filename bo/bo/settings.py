@@ -9,6 +9,7 @@ MONGO_DATABASE = 'bo_db'
 MONGO_URI = 'mongodb://localhost:27017/'
 MONGO_COLLECTION_NAME = 'bo_items'
 OUTPUT_FILE = 'output.debug.json'
+ALCHEMY_API_RETRY_DELAY_MINUTES = 60
 ###############################################################
 
 BOT_NAME = 'bo'
