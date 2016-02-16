@@ -1,76 +1,38 @@
-###Notes:
-1. Domain names restricted by node names, so as to prevent Bo to start crawling everything on the web!
-   Drawback: some websites use different domain names, and some might be filtered out.
-             e.g.: www.ipcc-wg2.gov will be blocked when www.ipcc.org was in the domains
+#Bo
+Bo is a sentiment analysis web crawler that crawls all the webpages that it can find starting at the configured root URLs, and then analyses the sentiments on these pages. The bundled sentiment and tag info can then be stored/processed for further downstream actions.
 
-             You might want to visit the external page (it's a externally cited page),
-             but it will be blocked out.
+Bo stays on the same domains as the root URLs, so as to get the results only from the specified websites. This prevents Bo from wandering off into unwanted locations on the web.
 
-             Design your CSV appropriately.
+##Dependecies
+Bo is built using Python 2 (tested on 2.7.11), and uses [Scrapy](http://scrapy.org/) for web crawling. The NLP is done using [Alchemy API](http://www.alchemyapi.com/developers/getting-started-guide/using-alchemyapi-with-python). To see all the dependencies, see /requirements.txt. Install dependecies like this:
 
-###Dependencies
-1. Python 2 and pip (Built and tested on Python 2.7)
-2. [PyMongo](https://api.mongodb.org/python/current/installation.html)
+```sh
+# Install all pip requirements
+$ pip install -r requirements.txt
 
-    ```sh
-    $ python -m pip install pymongo
-    ```
-3. [Scrapy](http://scrapy.org/)
+# Install Python Alchemy API (submodule)
+$ git submodule init && git submodule update
+```
 
-    ```sh
-    $ python -m pip install scrapy
-    ```
-4. [Requests](http://docs.python-requests.org/en/latest/user/install/)
+##Running
+Ensure that you've configured bo/bo/settings.py properly (see 'Configuration' below), and then start Bo as a scrapy crawler like this:
 
-    ```sh
-    $ python -m pip install requests
-    ```
-5. [Alchemy Python SDK](http://www.alchemyapi.com/developers/getting-started-guide/using-alchemyapi-with-python)
-    -included as a git submodule
-
-    ```sh
-    # If not cloned yet:
-    $ git clone --recursive https://github.com/udeyrishi/Bo
-
-    # If already cloned:
-    $ cd Bo
-    $ git submodule init && git submodule update
-    ```
-
-6. [Pause](https://pypi.python.org/pypi/pause/0.1.2)
-
-    ```sh
-    python -m pip install pause
-    ```
-
-###Running
 ```sh
 $ scrapy crawl bo
 ```
 
-###IntelliJ Idea/PyCharm support
+If you use IntelliJ based IDEs, and want to debug Bo using it, see this [StackOverflow guide](http://stackoverflow.com/questions/21788939/how-to-use-pycharm-to-debug-scrapy-projects).
 
-Use [this](http://stackoverflow.com/questions/21788939/how-to-use-pycharm-to-debug-scrapy-projects) to setup the run configuration to get debugging in the IDE with some modifications:
+##Configuring
+Bo allows you to specify some settings in bo/bo/settings.py. Here's what they mean:
 
-1. Set the script parameters as:
-
-    ```
-    crawl bo
-    ```
-
-2. Set working directory to the path to the repo
-
-###Filtering ideas:
-1. Extract named entities/proper nouns such as places, people, organizations, etc. and match them against a predefined set of keywords. If the number of matched elements >= N, proceed with the analysis. If yes, what keywords should be used, and do you have an initial value of N?
-2. Extract keywords and do the same, but these keywords can be anything (not just named entities). Most likely, this is a superset of above.
-3. Look for matching concepts (text) that the Watson computer thinks relate to a particular page, even if these concepts didn’t necessarily appear in the page. Pick only the concepts with relevance >= threshold F. Match these concepts like 1.
-
-###Processing ideas:
-Applies only the filtered pages:
-1. The keywords + entity filters already should have sentiments attached for these words.
-Pass them along. Then find a sentiment for the entire page.
-Targetted sentiments are not useful, as the keyword + entity search in filtering stage should give the corresponding sentiments.
-
-=> Combine the keyword, entity, page sentiments into 1 score 0-1. Put individual ones in the DTO, and use the global score.
-2. [CREATE MONGO DTO] Extract author. Check for return status to be 'ERROR'
-3. [CREATE MONGO DTO] Extract category
+* START\_URLS\_FILE: Path to the CSV file (Excel format) that contains the start URLs and the allowed domains. The first row contains the column titles. It should contain either 'Node' or 'URL' columns, or both (at least). If both are present, the Node is used as the allowed domain name, URL as a root URL. If just Node is present, then it is used as both root URL and domain. Else if just URL is present, the URL is added as a root URL, and no addition is made to the allowed domains (i.e., this URL might get ignored if the corresponding domain was not previously added). All other fields, if any, will be bundled as the 'metadata' field in the final processed item sent downstream to the storage stages.
+* TAGS\_FILE: The file containing all the tags that need to be matched with the tags in the webpage. One tag per line.
+* ALCHEMY\_API\_KEY: The Alchemy API key. Registere [here](http://www.alchemyapi.com/api/register.html).
+* TAG\_MATCH\_THRESHOLD: The minimum number of tags (keywords + entities + concepts) to be matched (completely or partially), else the webpage will be dropped.
+* RELEVANCE\_THRESHOLD: The tags with relevance less than this value will be dropped and will not be used for TAG\_MATCH\_THRESHOLD verification, and will also not be bundled in the final storage object.
+* MONGO\_DATABASE: The MongoDB name, if MongoStorageStage is being used.
+* MONGO\_URI: The MongoDB URI, if MongoStorageStage is being used.
+* MONGO\_COLLECTION\_NAME: The MongoDB collection, if MongoStorageStage is being used.
+* OUTPUT_FILE: The path to the output file, if JsonFileWriterStage is being used.
+* ALCHEMY\_API\_RETRY\_DELAY\_MINUTES: The duration (in minutes) for which Bo will be suspended before retrying if Alchemy API's daily transaction limit is reached.
