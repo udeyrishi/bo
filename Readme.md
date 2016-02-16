@@ -43,7 +43,7 @@ Bo allows you to specify some settings in bo/bo/settings.py. Here's what they me
 * ALCHEMY\_API\_RETRY\_DELAY\_MINUTES: The duration (in minutes) for which Bo will be suspended before retrying if Alchemy API's daily transaction limit is reached.
 
 ##Outputs
-Bo is built using the Scrapy [pipeline](https://github.com/udeyrishi/bo/blob/master/sample-config-files/keywords.txt) model, where it goes through a sequence of processing stages and ultimately reaches the PackagingStage (see 'ITEM_PIPELINES' in settings.py). This packaging stage packs up the info gathered so far into a useful data transfer object, which is sent down to the next stage--usually a data storage stage (JsonFileWriterStage, MongoStorageStage, or potentially others). This DTO (BoPackagedItem) is essentially Bo's output for a web page, given that it wasn't dropped based on the way Bo was configured (see 'Configuration' above). A sample output BoPackagedItem would look like this:
+Bo is built using the Scrapy [pipeline](http://doc.scrapy.org/en/latest/topics/item-pipeline.html) model, where it goes through a sequence of processing stages and ultimately reaches the PackagingStage (see 'ITEM_PIPELINES' in settings.py). This packaging stage packs up the info gathered so far into a useful data transfer object, which is sent down to the next stage--usually a data storage stage (JsonFileWriterStage, MongoStorageStage, or potentially others). This DTO (BoPackagedItem) is essentially Bo's output for a web page, given that it wasn't dropped based on the way Bo was configured (see 'Configuration' above). A sample output BoPackagedItem would look like this:
 
 ```
 {
