@@ -14,7 +14,7 @@ MONGO_COLLECTION_NAME = 'MONGO_COLLECTION_NAME'
 OUTPUT_FILE = 'OUTPUT_FILE'
 
 
-class PackagingPipeline(object):
+class PackagingStage(object):
     def process_item(self, bo_pipeline_item, spider):
         packaged_item = BoPackagedItem()
         packaged_item['url'] = bo_pipeline_item.get_url()

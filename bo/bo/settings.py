@@ -21,7 +21,7 @@ ITEM_PIPELINES = {
     'bo.pipelines.alchemy_nlp_pipeline.TagAnalysisStage': 1,
     'bo.pipelines.alchemy_nlp_pipeline.RelevanceFiltrationStage': 2,
     'bo.pipelines.alchemy_nlp_pipeline.PageOverallAnalysisStage': 3,
-    'bo.pipelines.storage_pipeline.PackagingPipeline': 4,
+    'bo.pipelines.storage_pipeline.PackagingStage': 4,
     # 'bo.pipelines.storage_pipeline.JsonFileWriterStage': 4.5,
     'bo.pipelines.storage_pipeline.MongoStorageStage': 5
 }
