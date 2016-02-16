@@ -23,6 +23,7 @@ class PackagingPipeline(object):
         packaged_item['doc_sentiment'] = self.cleanup_doc_sentiment(
                 bo_pipeline_item['sentiment_nlp_result']['docSentiment'])
         packaged_item['tags'] = bo_pipeline_item['tags']
+        packaged_item['metadata'] = bo_pipeline_item['metadata']
 
         return packaged_item
 

@@ -60,11 +60,11 @@ class BoSpider(CrawlSpider):
                 if row['Node'] and row['URL']:
                     self.allowed_domains.append(row['Node'])
                     self.start_urls.append(self.add_scheme_if_missing(row['URL'], scheme='http'))
-                    self.url_metadata[row['Node']] = row
+                    self.url_metadata[row['Node']] = {k: v for k, v in row.items() if k != 'Node' and k != 'URL'}
                 elif row['Node']:
                     self.allowed_domains.append(row['Node'])
                     self.start_urls.append(self.add_scheme_if_missing(row['Node'], scheme='http'))
-                    self.url_metadata[row['Node']] = row
+                    self.url_metadata[row['Node']] = {k: v for k, v in row.items() if k != 'Node'}
                 elif row['URL']:
                     self.start_urls.append(self.add_scheme_if_missing(row['URL'], scheme='http'))
                     self.logger.warning("URL '{0}' didn't have a 'Node' entry. No changes have been made for the "
@@ -100,8 +100,11 @@ class BoSpider(CrawlSpider):
     def parse_start_url(self, response):
         return self.parse_response(response)
 
-    @staticmethod
-    def parse_response(response):
+    def parse_response(self, response):
         item = BoPipelineItem()
         item.update(html_response=response)
+        domain = urlparse(item.get_url()).netloc
+        metadata = self.url_metadata.get(domain)
+        item.update(metadata=metadata)
+
         return item
