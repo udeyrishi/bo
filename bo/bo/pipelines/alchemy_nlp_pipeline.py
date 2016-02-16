@@ -56,7 +56,7 @@ class AlchemyNLPStage(object):
     def error_safe_api_executor(self, api_func):
         result = api_func()
 
-        while result['status'] == 'ERROR' and result['statusInfo'] == 'daily-transaction-limit-exceeded':
+        while result['status'].lower() == 'error' and result['statusInfo'] == 'daily-transaction-limit-exceeded':
             wait_until = datetime.datetime.now() + datetime.timedelta(minutes=self.api_retry_delay_minutes)
 
             logging.info(
@@ -65,7 +65,7 @@ class AlchemyNLPStage(object):
             pause.until(wait_until)
             result = api_func()
 
-        if result['status'] == 'ERROR':
+        if result['status'].lower() == 'error':
             raise DropItem("Alchemy returned unknown Error : '{0}'".format(result['statusInfo']))
 
         return result
