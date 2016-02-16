@@ -27,6 +27,7 @@ MONGO_URI = 'mongodb://localhost:27017/'
 MONGO_COLLECTION_NAME = 'bo_items'
 OUTPUT_FILE = 'output.debug.json'
 ALCHEMY_API_RETRY_DELAY_MINUTES = 60
+LOG_LEVEL = 'INFO'  # Choices: CRITICAL, ERROR, WARNING, INFO, DEBUG
 ###############################################################
 
 BOT_NAME = 'bo'

@@ -18,6 +18,8 @@ $ git submodule init && git submodule update
 Ensure that you've configured bo/bo/settings.py properly (see 'Configuration' below), and then start Bo as a scrapy crawler like this:
 
 ```sh
+# Run Bo from the source directory 'bo'
+$ cd bo
 $ scrapy crawl bo
 ```
 
@@ -76,7 +78,7 @@ Bo is built using the Scrapy [pipeline](https://github.com/udeyrishi/bo/blob/mas
 			'mixed': true,
 			'matched': 'partial'
 		}
-	} 
+	}
 }
 ```
 Here, 'metadata' contains values of all the extra columns that were put in the START\_URLS\_FILE. The doc\_sentiment field corresponds to the corresponding [Alchemy API](http://www.alchemyapi.com/api/sentiment/urls.html). The tags field contains all the keywords, entities, or concepts that were found in the page that had a relevance score of at least RELEVANCE\_THRESHOLD. A complete matching with a tag in the TAGS_FILE implies a matched 'yes', else a 'no'. Bo also tries to split all the multi-word tags in the TAGS\_FILE and the found tags into individual words, and then tries to match them. If a match happens this way, it's called a 'partial' match.
