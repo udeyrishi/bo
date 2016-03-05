@@ -47,7 +47,7 @@ class PackagingStage(object):
     @staticmethod
     def cleanup_doc_sentiment(doc_sentiment):
         return {
-            'mixed': doc_sentiment['mixed'] == 1,
+            'mixed': doc_sentiment['mixed'] == 1 if 'mixed' in doc_sentiment else False,
             'score': float(doc_sentiment['score']),
             'type': doc_sentiment['type']
         }
