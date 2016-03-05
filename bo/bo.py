@@ -21,6 +21,8 @@ import signal
 import logging
 import sys
 import os
+from threading import Timer
+from bo.settings import BO_MANAGER_SETTINGS
 
 BO_LAUNCH_COMMAND = 'scrapy crawl bo'
 SHUTDOWN_SUCCESSFUL_MESSAGE = 'Spider closed (shutdown)'
@@ -32,11 +34,12 @@ class BoManager:
     received.
     """
 
-    def __init__(self, logger):
+    def __init__(self, logger, force_kill_delay_seconds=10):
         self.__last_output = ''
         self.__sigint_received = False
         self.__bo_pid = None
         self.__logger = logger
+        self.__final_kill_timer = Timer(force_kill_delay_seconds, self.__kill_bo)
         signal.signal(signal.SIGINT, lambda sig, frame: self.__sigint_handler(sig, frame))
 
     def run(self):
@@ -45,6 +48,8 @@ class BoManager:
             if rc == 0 and self.__last_output.find(SHUTDOWN_SUCCESSFUL_MESSAGE) != -1:
                 break
 
+        # Cancel the SIGINT call if properly terminated
+        self.__final_kill_timer.cancel()
         self.__logger.log(logging.INFO, 'Bo successfully shut down')
 
     def __run_command(self, command):
@@ -63,8 +68,11 @@ class BoManager:
         self.__logger.log(logging.INFO, 'SIGINT received. Shutting down scrapy')
         self.__sigint_received = True
         if self.__bo_pid is not None:
-            for i in range(2):
-                subprocess.call(['kill', '-SIGINT', str(self.__bo_pid)])
+            self.__kill_bo()
+            self.__final_kill_timer.start()
+
+    def __kill_bo(self):
+        subprocess.call(['kill', '-SIGINT', str(self.__bo_pid)])
 
 
 def configure_logger():
@@ -79,7 +87,7 @@ def configure_logger():
 
 def main():
     logger = configure_logger()
-    bo_manager = BoManager(logger)
+    bo_manager = BoManager(logger, BO_MANAGER_SETTINGS.get('force_kill_delay_seconds', 10))
     bo_manager.run()
 
 
