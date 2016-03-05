@@ -29,6 +29,8 @@ class BoPipelineItem(scrapy.Item):
     category_nlp_result = scrapy.Field()
     metadata = scrapy.Field()
 
+    parent_url = scrapy.Field()
+
     def get_url(self):
         return self['html_response'].url
 
@@ -40,3 +42,4 @@ class BoPackagedItem(scrapy.Item):
     doc_sentiment = scrapy.Field()
     tags = scrapy.Field()
     metadata = scrapy.Field()
+    parent_url = scrapy.Field()

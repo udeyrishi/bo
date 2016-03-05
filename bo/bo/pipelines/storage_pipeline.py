@@ -40,6 +40,7 @@ class PackagingStage(object):
                 bo_pipeline_item['sentiment_nlp_result']['docSentiment'])
         packaged_item['tags'] = bo_pipeline_item['tags']
         packaged_item['metadata'] = bo_pipeline_item['metadata']
+        packaged_item['parent_url'] = bo_pipeline_item['parent_url']
 
         return packaged_item
 

@@ -22,6 +22,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.utils.project import get_project_settings
 
 from bo.items import BoPipelineItem
+from bo.spiders.edged_link_extractor import EdgedLinkExtractor
 from bo.utils.exceptions import BoSettingsError
 from bo.utils.sequence_utils import remove_duplicates
 
@@ -35,9 +36,14 @@ class BoSpider(CrawlSpider):
     allowed_domains = []
     start_urls = []
 
-    # Just extract all the links from the page and queue them up. allowed_domains will block all the external links
-    rules = (Rule(LinkExtractor(), follow=True, callback='parse_response'),)
     url_metadata = dict()
+
+    # No need to add root urls in this, as their parents are None
+    child_to_parent_map = dict()
+
+    # Just extract all the links from the page and queue them up. allowed_domains will block all the external links
+    # Keep updating the child_to_parent_map
+    rules = (Rule(EdgedLinkExtractor(LinkExtractor(), child_to_parent_map), follow=True, callback='parse_response'),)
 
     def __init__(self, start_urls_path=None, *args, **kwargs):
         """
@@ -120,13 +126,17 @@ class BoSpider(CrawlSpider):
         item = BoPipelineItem()
         item.update(html_response=response)
         url_obj = urlparse(item.get_url())
-        domain = url_obj.netloc
-
-        metadata = self.url_metadata.get(domain) or self.url_metadata.get(
-            domain.replace('www.', '')) or self.url_metadata.get(
-            domain.replace('{0}://'.format(url_obj.scheme), '')) or self.url_metadata.get(
-            domain.replace('{0}://www.'.format(url_obj.scheme), ''))
-
-        item.update(metadata=metadata)
-
+        metadata = self.get_metadata(url_obj.netloc, url_obj.scheme)
+        parent_url = self.get_parent_url(item.get_url())
+        item.update(metadata=metadata, parent_url=parent_url)
         return item
+
+    def get_metadata(self, domain, scheme):
+        return self.url_metadata.get(domain) or \
+               self.url_metadata.get(domain.replace('www.', '')) or \
+               self.url_metadata.get(domain.replace('{0}://'.format(scheme), '')) or \
+               self.url_metadata.get(domain.replace('{0}://www.'.format(scheme), ''))
+
+    def get_parent_url(self, child_url):
+        return self.child_to_parent_map.get(child_url)
+
