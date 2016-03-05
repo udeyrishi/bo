@@ -22,8 +22,8 @@ import logging
 import sys
 import os
 
-BO_LAUNCH = 'scrapy crawl bo'
-SHUTDOWN_MESSAGE = 'Spider closed (shutdown)'
+BO_LAUNCH_COMMAND = 'scrapy crawl bo'
+SHUTDOWN_SUCCESSFUL_MESSAGE = 'Spider closed (shutdown)'
 
 
 class BoManager:
@@ -32,19 +32,17 @@ class BoManager:
     received.
     """
 
-    def __init__(self, launch_command, shutdown_message, logger):
-        self.__launch_command = launch_command
-        self.__shutdown_message = shutdown_message
+    def __init__(self, logger):
         self.__last_output = ''
         self.__sigint_received = False
         self.__bo_pid = None
         self.__logger = logger
-        signal.signal(signal.SIGINT, lambda sig, frame: self.sigint_handler(sig, frame))
+        signal.signal(signal.SIGINT, lambda sig, frame: self.__sigint_handler(sig, frame))
 
     def run(self):
         while not self.__sigint_received:
-            rc = self.__run_command(self.__launch_command)
-            if rc == 0 and self.__last_output.find(self.__shutdown_message) != -1:
+            rc = self.__run_command(BO_LAUNCH_COMMAND)
+            if rc == 0 and self.__last_output.find(SHUTDOWN_SUCCESSFUL_MESSAGE) != -1:
                 break
 
         self.__logger.log(logging.INFO, 'Bo successfully shut down')
@@ -61,8 +59,7 @@ class BoManager:
                 self.__last_output = output
         return process.poll()
 
-    def sigint_handler(self, sig, frame):
-        print('')
+    def __sigint_handler(self, sig, frame):
         self.__logger.log(logging.INFO, 'SIGINT received. Shutting down scrapy')
         self.__sigint_received = True
         if self.__bo_pid is not None:
@@ -82,7 +79,7 @@ def configure_logger():
 
 def main():
     logger = configure_logger()
-    bo_manager = BoManager(BO_LAUNCH, SHUTDOWN_MESSAGE, logger)
+    bo_manager = BoManager(logger)
     bo_manager.run()
 
 
