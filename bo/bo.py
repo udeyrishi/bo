@@ -20,6 +20,7 @@ import subprocess
 import signal
 import logging
 import sys
+import os
 
 BO_LAUNCH = 'scrapy crawl bo'
 SHUTDOWN_MESSAGE = 'Spider closed (shutdown)'
@@ -49,7 +50,7 @@ class BoManager:
         self.__logger.log(logging.INFO, 'Bo successfully shut down')
 
     def __run_command(self, command):
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, preexec_fn=lambda: os.setpgrp())
         self.__bo_pid = process.pid
         while True:
             output = process.stdout.readline()
@@ -65,7 +66,8 @@ class BoManager:
         self.__logger.log(logging.INFO, 'SIGINT received. Shutting down scrapy')
         self.__sigint_received = True
         if self.__bo_pid is not None:
-            subprocess.call(['kill', '-SIGINT', str(self.__bo_pid)])
+            for i in range(2):
+                subprocess.call(['kill', '-SIGINT', str(self.__bo_pid)])
 
 
 def configure_logger():
