@@ -39,7 +39,8 @@ class BoManager:
         self.__sigint_received = False
         self.__bo_pid = None
         self.__logger = logger
-        self.__final_kill_timer = Timer(force_kill_delay_seconds, self.__kill_bo)
+        self.__final_kill_timer = Timer(force_kill_delay_seconds, self.__force_kill_bo)
+        self.__killed = False
         signal.signal(signal.SIGINT, lambda sig, frame: self.__sigint_handler(sig, frame))
 
     def run(self):
@@ -65,11 +66,17 @@ class BoManager:
         return process.poll()
 
     def __sigint_handler(self, sig, frame):
-        self.__logger.log(logging.INFO, 'SIGINT received. Shutting down scrapy')
-        self.__sigint_received = True
-        if self.__bo_pid is not None:
-            self.__kill_bo()
-            self.__final_kill_timer.start()
+        if not self.__killed:
+            self.__killed = True
+            self.__logger.log(logging.INFO, 'SIGINT received. Shutting down scrapy')
+            self.__sigint_received = True
+            if self.__bo_pid is not None:
+                self.__kill_bo()
+                self.__final_kill_timer.start()
+
+    def __force_kill_bo(self):
+        self.__logger.log(logging.INFO, 'Scrapy shut down not responding. Trying force kill')
+        self.__kill_bo()
 
     def __kill_bo(self):
         subprocess.call(['kill', '-SIGINT', str(self.__bo_pid)])
