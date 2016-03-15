@@ -18,6 +18,7 @@ import json
 import logging
 
 import pymongo
+import time
 from scrapy.exceptions import DropItem
 
 from bo.items import BoPackagedItem
@@ -33,15 +34,16 @@ OUTPUT_FILE = 'OUTPUT_FILE'
 class PackagingStage(object):
     def process_item(self, bo_pipeline_item, spider):
         packaged_item = BoPackagedItem()
-        packaged_item['url'] = bo_pipeline_item.get_url()
-        packaged_item['language'] = bo_pipeline_item['sentiment_nlp_result']['language']
-        packaged_item['category'] = bo_pipeline_item['category_nlp_result']['category']
-        packaged_item['doc_sentiment'] = self.cleanup_doc_sentiment(
-                bo_pipeline_item['sentiment_nlp_result']['docSentiment'])
-        packaged_item['tags'] = bo_pipeline_item['tags']
-        packaged_item['metadata'] = bo_pipeline_item['metadata']
-        packaged_item['parent_url'] = bo_pipeline_item['parent_url']
-
+        packaged_item.update(
+            url=bo_pipeline_item.get_url(),
+            language=bo_pipeline_item['sentiment_nlp_result']['language'],
+            category=bo_pipeline_item['category_nlp_result']['category'],
+            doc_sentiment=self.cleanup_doc_sentiment(bo_pipeline_item['sentiment_nlp_result']['docSentiment']),
+            tags=bo_pipeline_item['tags'],
+            metadata=bo_pipeline_item['metadata'],
+            parent_url=bo_pipeline_item['parent_url'],
+            time_updated=time.time()
+        )
         return packaged_item
 
     @staticmethod

@@ -43,3 +43,4 @@ class BoPackagedItem(scrapy.Item):
     tags = scrapy.Field()
     metadata = scrapy.Field()
     parent_url = scrapy.Field()
+    time_updated = scrapy.Field()
