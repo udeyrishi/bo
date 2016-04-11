@@ -22,7 +22,7 @@ class ArgumentNoneError(CloseSpider):
     Exception raised when an argument is None.
     """
     def __init__(self, reason='argument-none'):
-        super(BoSettingsError, self).__init__(reason)
+        super(CloseSpider, self).__init__(reason)
 
 
 class BoSettingsError(CloseSpider):
