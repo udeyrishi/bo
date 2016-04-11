@@ -47,18 +47,21 @@ class BoManager:
 
     def run(self):
         while not self.__sigint_received:
-            self.__logger.log(logging.INFO, 'Starting Bo...')
+            self.__logger.log(logging.CRITICAL, 'Starting Bo...')
             rc = self.__run_command(BO_LAUNCH_COMMAND)
             if rc == 0:
+                if self.__sigint_received:
+                    break
+
                 delay = BO_MANAGER_SETTINGS.get('alchemy_api_retry_delay_minutes', 10)
-                self.__logger.log(logging.INFO, 'Restarting Bo in {0} seconds...'.format(delay))
+                self.__logger.log(logging.CRITICAL, 'Restarting Bo in {0} seconds...'.format(delay))
                 sleep(delay)
             else:
                 break
 
         # Cancel the SIGINT call if properly terminated
         self.__final_kill_timer.cancel()
-        self.__logger.log(logging.INFO, 'Bo successfully shut down')
+        self.__logger.log(logging.CRITICAL, 'Bo successfully shut down')
 
     def __run_command(self, command):
         process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, preexec_fn=os.setpgrp)
@@ -75,14 +78,14 @@ class BoManager:
     def __sigint_handler(self, sig, frame):
         if not self.__killed:
             self.__killed = True
-            self.__logger.log(logging.INFO, 'SIGINT received. Shutting down scrapy')
+            self.__logger.log(logging.CRITICAL, 'SIGINT received. Shutting down scrapy')
             self.__sigint_received = True
             if self.__bo_pid is not None:
                 self.__kill_bo()
                 self.__final_kill_timer.start()
 
     def __force_kill_bo(self):
-        self.__logger.log(logging.INFO, 'Scrapy shut down not responding. Trying force kill')
+        self.__logger.log(logging.CRITICAL, 'Scrapy shut down not responding. Trying force kill')
         self.__kill_bo()
 
     def __kill_bo(self):
@@ -91,7 +94,7 @@ class BoManager:
 
 def configure_logger():
     root = logging.getLogger()
-    root.setLevel(logging.INFO)
+    root.setLevel(logging.getLevelName(BO_MANAGER_SETTINGS.get('log_level')))
     ch = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter('%(asctime)s [BO MANAGER] [%(name)s] [%(levelname)s]: %(message)s')
     ch.setFormatter(formatter)

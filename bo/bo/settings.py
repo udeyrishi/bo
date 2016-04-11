@@ -26,8 +26,9 @@ MONGO_DATABASE = 'bo_db'
 MONGO_URI = 'mongodb://localhost:27017/'
 MONGO_COLLECTION_NAME = 'bo_items'
 OUTPUT_FILE = 'output.debug.json'
-LOG_LEVEL = 'INFO'  # Choices: CRITICAL, ERROR, WARNING, INFO, DEBUG
+LOG_LEVEL = 'CRITICAL'  # Choices: CRITICAL, ERROR, WARNING, INFO, DEBUG
 BO_MANAGER_SETTINGS = {
+    'log_level': LOG_LEVEL,
     'force_kill_delay_seconds': 10,
     'alchemy_api_retry_delay_minutes': 10
 }
