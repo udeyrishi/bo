@@ -103,5 +103,8 @@ Bo is built using the Scrapy [pipeline](http://doc.scrapy.org/en/latest/topics/i
 ```
 Here, 'metadata' contains values of all the extra columns that were put in the START\_URLS\_FILE. The doc\_sentiment field corresponds to the corresponding [Alchemy API](http://www.alchemyapi.com/api/sentiment/urls.html). The tags field contains all the keywords, entities, or concepts that were found in the page that had a relevance score of at least RELEVANCE\_THRESHOLD. A complete matching with a tag in the TAGS_FILE implies a matched 'yes', else a 'no'. Bo also tries to split all the multi-word tags in the TAGS\_FILE and the found tags into individual words, and then tries to match them. If a match happens this way, it's called a 'partial' match.
 
+##Output Querying
+It's pretty straightforward to query the processed results, because they are simple JSONs or BSONs. See a sample [querying tool](https://github.com/udeyrishi/bo_query_tool) that queries the MongoDB stored results based on tags.
+ 
 ##Licence
 Bo is licensed under the Apache License, v2.0. See [this](https://github.com/udeyrishi/bo/blob/master/LICENSE) for details.
