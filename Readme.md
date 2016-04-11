@@ -71,29 +71,32 @@ Bo is built using the Scrapy [pipeline](http://doc.scrapy.org/en/latest/topics/i
 		'score': 0.923,
 		'type': 'positive'
 	},
-	'tags': {
-		'tag1': {
+	'tags': [
+		{
+			'tag': 'tag1',
 			'count': 3,
 			'relevance': 0.671,
 			'sentiment': 0.9,
 			'mixed': false,
 			'matched': 'yes'
 		},
-		'tag2': {
+		{
+			'tag': 'tag2',
 			'count': 1,
 			'relevance': 0.921,
 			'sentiment': -0.9,
 			'mixed': false,
 			'matched': 'no'
 		},
-		'tag3': {
+		{
+			'tag' : 'tag3',
 			'count': 7,
 			'relevance': 0.981,
 			'sentiment': 0,
 			'mixed': true,
 			'matched': 'partial'
 		}
-	},
+	],
 	'parent_url': 'http://www.myawesomesite.com/',
 	'time_updated': 1460398914.12
 }

@@ -39,7 +39,7 @@ class PackagingStage(object):
             language=bo_pipeline_item['sentiment_nlp_result']['language'],
             category=bo_pipeline_item['category_nlp_result']['category'],
             doc_sentiment=self.cleanup_doc_sentiment(bo_pipeline_item['sentiment_nlp_result']['docSentiment']),
-            tags=bo_pipeline_item['tags'],
+            tags=self.__flatten_tags(bo_pipeline_item['tags']),
             metadata=bo_pipeline_item['metadata'],
             parent_url=bo_pipeline_item['parent_url'],
             time_updated=time.time()
@@ -53,6 +53,14 @@ class PackagingStage(object):
             'score': float(doc_sentiment['score']),
             'type': doc_sentiment['type']
         }
+
+    @staticmethod
+    def __flatten_tags(tags_dict):
+        flattened = []
+        for tag_name, tag_properties in tags_dict.items():
+            tag_properties['tag'] = tag_name
+            flattened.append(tag_properties)
+        return flattened
 
 
 class JsonFileWriterStage(object):
