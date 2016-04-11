@@ -22,6 +22,8 @@ import logging
 import sys
 import os
 from threading import Timer
+from time import sleep
+
 from bo.settings import BO_MANAGER_SETTINGS
 
 BO_LAUNCH_COMMAND = 'scrapy crawl bo'
@@ -45,8 +47,13 @@ class BoManager:
 
     def run(self):
         while not self.__sigint_received:
+            self.__logger.log(logging.INFO, 'Starting Bo...')
             rc = self.__run_command(BO_LAUNCH_COMMAND)
-            if rc == 0 and self.__last_output.find(SHUTDOWN_SUCCESSFUL_MESSAGE) != -1:
+            if rc == 0:
+                delay = BO_MANAGER_SETTINGS.get('alchemy_api_retry_delay_minutes', 10)
+                self.__logger.log(logging.INFO, 'Restarting Bo in {0} seconds...'.format(delay))
+                sleep(delay)
+            else:
                 break
 
         # Cancel the SIGINT call if properly terminated
@@ -54,7 +61,7 @@ class BoManager:
         self.__logger.log(logging.INFO, 'Bo successfully shut down')
 
     def __run_command(self, command):
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, preexec_fn=lambda: os.setpgrp())
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, preexec_fn=os.setpgrp)
         self.__bo_pid = process.pid
         while True:
             output = process.stdout.readline()

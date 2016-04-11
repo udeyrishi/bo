@@ -26,10 +26,10 @@ MONGO_DATABASE = 'bo_db'
 MONGO_URI = 'mongodb://localhost:27017/'
 MONGO_COLLECTION_NAME = 'bo_items'
 OUTPUT_FILE = 'output.debug.json'
-ALCHEMY_API_RETRY_DELAY_MINUTES = 60
 LOG_LEVEL = 'INFO'  # Choices: CRITICAL, ERROR, WARNING, INFO, DEBUG
 BO_MANAGER_SETTINGS = {
-    'force_kill_delay_seconds': 10
+    'force_kill_delay_seconds': 10,
+    'alchemy_api_retry_delay_minutes': 10
 }
 ###############################################################
 

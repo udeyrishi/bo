@@ -17,6 +17,7 @@ limitations under the License.
 from csv import DictReader
 from urlparse import urlparse
 
+from scrapy.exceptions import CloseSpider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.utils.project import get_project_settings
@@ -54,6 +55,7 @@ class BoSpider(CrawlSpider):
         super(BoSpider, self).__init__(*args, **kwargs)
         self.start_urls_path = start_urls_path
         self.__read_start_urls(get_project_settings())
+        self.nlp_transaction_limit_reached = False
 
     def __read_start_urls(self, settings):
         """
@@ -123,6 +125,9 @@ class BoSpider(CrawlSpider):
         return self.parse_response(response)
 
     def parse_response(self, response):
+        if self.nlp_transaction_limit_reached:
+            self.logger.critical("Today's Alchemy API transaction limit reached.")
+            raise CloseSpider("Today's Alchemy API transaction limit reached.")
         item = BoPipelineItem()
         item.update(html_response=response)
         url_obj = urlparse(item.get_url())
