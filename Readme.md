@@ -7,7 +7,7 @@ Bo is a sentiment analysis web crawler that crawls all the webpages that it can 
 Bo stays on the same domains as the root URLs, so as to get the results only from the specified websites. This prevents Bo from wandering off into unwanted locations on the web.
 
 ##Dependencies
-Bo is built using Python 2 (tested on 2.7.11), and uses [Scrapy](http://scrapy.org/) for web crawling. The NLP is done using [Alchemy API](http://www.alchemyapi.com/developers/getting-started-guide/using-alchemyapi-with-python). To see all the dependencies, see /requirements.txt. Install dependecies like this:
+Bo is built using Python 2 (tested on 2.7.11), and uses [Scrapy](http://scrapy.org/) for web crawling. The NLP is done using [Alchemy API](http://www.alchemyapi.com/developers/getting-started-guide/using-alchemyapi-with-python), and the final processed objects are stored in MongoDB. To see all the dependencies, see /requirements.txt. Install dependecies like this:
 
 ```sh
 # Install all pip requirements
@@ -18,11 +18,23 @@ $ git submodule init && git submodule update
 ```
 
 ##Running
+Bo can either be run as a regular Scrapy crawler, or through the ```BoManager```. The latter is a separate helper process that ensures that Bo keeps running even if some expected errors happen. Benefits of ```BoManager```:
+
+1. If the daily Alchemy API usage limit is reached, BoManager relaunches Bo after delaying for ```settings.BO_MANAGER_SETTINGS.retry_delay_seconds``` seconds. This re-attempts keep on happening indefinitely until Alchemy responds with a success message.
+
+2. If the all the URLs (starting at the ```settings.START_URLS_FILE``` root URLs) are depleted, ```BoManager``` relaunches Bo after ```settings.BO_MANAGER_SETTINGS.retry_delay_seconds``` seconds.
+
+3. ```BoManager``` ensures that Bo doesn't keep running if an issue arises. On sending a SIGINT to BoManager, it passes the SIGINT to Bo as well. If Bo doesn't terminate ```settings.BO_MANAGER_SETTINGS.force_kill_delay_seconds``` seconds, ```BoManager``` force terminates it. 
+
 Ensure that you've configured bo/bo/settings.py properly (see 'Configuration' below), and then start Bo as a scrapy crawler like this:
 
 ```sh
-# Run Bo from the source directory 'bo'
 $ cd bo
+
+# Run Bo with BoManager support
+$ ./bo.py
+
+# Run Bo as a regular crawler
 $ scrapy crawl bo
 ```
 

@@ -27,7 +27,6 @@ from time import sleep
 from bo.settings import BO_MANAGER_SETTINGS
 
 BO_LAUNCH_COMMAND = 'scrapy crawl bo'
-SHUTDOWN_SUCCESSFUL_MESSAGE = 'Spider closed (shutdown)'
 
 
 class BoManager:
@@ -53,7 +52,7 @@ class BoManager:
                 if self.__sigint_received:
                     break
 
-                delay = BO_MANAGER_SETTINGS.get('alchemy_api_retry_delay_minutes', 10)
+                delay = BO_MANAGER_SETTINGS.get('retry_delay_seconds', 10)
                 self.__logger.log(logging.CRITICAL, 'Restarting Bo in {0} seconds...'.format(delay))
                 sleep(delay)
             else:

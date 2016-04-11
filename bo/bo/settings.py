@@ -30,7 +30,7 @@ LOG_LEVEL = 'CRITICAL'  # Choices: CRITICAL, ERROR, WARNING, INFO, DEBUG
 BO_MANAGER_SETTINGS = {
     'log_level': LOG_LEVEL,
     'force_kill_delay_seconds': 10,
-    'alchemy_api_retry_delay_minutes': 10
+    'retry_delay_seconds': 10
 }
 ###############################################################
 
